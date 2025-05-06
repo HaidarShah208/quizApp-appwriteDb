@@ -5,6 +5,7 @@ import QuizDetails from './QuizDetails';
 import { databaseService } from '../../appwrite/database.service';
 import LoadingSpinner from '../loader/LoadingSpinner';
 import { IconExpand, IconDuplicate, IconLink, IconDelete, IconEdit, IconDownload } from '@/utils/utils';
+import Swal from 'sweetalert2';
 
 
 function ArbitrageQuiz() {
@@ -38,15 +39,46 @@ function ArbitrageQuiz() {
       await databaseService.createQuiz(newQuiz);
       setShowCreateForm(false);
       fetchQuizzes(); 
+      
+      Swal.fire({
+        title: 'Success!',
+        text: 'Quiz created successfully',
+        icon: 'success',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+      });
     } catch (err: any) {
       setError(err.message);
+      
+      Swal.fire({
+        title: 'Error!',
+        text: `Failed to create quiz: ${err.message}`,
+        icon: 'error',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      });
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleDeleteQuiz = async (quizId: string) => {
-    if (window.confirm('Are you sure you want to delete this quiz?')) {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
       try {
         setActionLoading(true);
         const success = await databaseService.deleteQuiz(quizId);
@@ -54,9 +86,21 @@ function ArbitrageQuiz() {
         if (success) {
           setQuizzes(prevQuizzes => prevQuizzes.filter(quiz => quiz.$id !== quizId));
           setError(null);
+          
+          Swal.fire(
+            'Deleted!',
+            'Your quiz has been deleted.',
+            'success'
+          );
         }
       } catch (err: any) {
         setError(`Failed to delete quiz: ${err.message}`);
+        
+        Swal.fire(
+          'Error!',
+          `Failed to delete quiz: ${err.message}`,
+          'error'
+        );
       } finally {
         setActionLoading(false);
       }
@@ -100,7 +144,7 @@ function ArbitrageQuiz() {
   return (
     <div className="w-full font-sans p-4 relative">
       {actionLoading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/30 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center">
             <LoadingSpinner size="medium" />
             <p className="mt-4 text-gray-700">Processing...</p>
@@ -140,6 +184,7 @@ function ArbitrageQuiz() {
         <CreateQuizForm 
           onCancel={() => setShowCreateForm(false)}
           onCreateQuiz={handleCreateQuiz}
+          isPrizeQuiz={false}
         />
       )}
       

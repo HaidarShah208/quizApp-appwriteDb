@@ -1,6 +1,7 @@
 export type CreateQuizFormProps = {
     onCancel: () => void;
     onCreateQuiz: (quizData: any) => void;
+    isPrizeQuiz?: boolean;
 }
 
 export type Question = {
@@ -20,6 +21,7 @@ export type Question = {
       id: number;
       quizName: string;
       questions: string;
+      prizeAmount?: string;
     };
     onBack: () => void;
   }

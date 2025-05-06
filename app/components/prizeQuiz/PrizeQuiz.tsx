@@ -5,6 +5,7 @@ import QuizDetails from '../arbitrageQuiz/QuizDetails';
 import { databaseService } from '../../appwrite/database.service';
 import LoadingSpinner from '../loader/LoadingSpinner';
 import { IconExpand, IconDuplicate, IconLink, IconDelete, IconEdit, IconDownload } from '@/utils/utils';
+import Swal from 'sweetalert2';
 
 
 function PrizeQuiz() {
@@ -38,15 +39,46 @@ function PrizeQuiz() {
       await databaseService.createQuiz(newQuiz);
       setShowCreateForm(false);
       fetchQuizzes(); 
+      
+      Swal.fire({
+        title: 'Success!',
+        text: 'Prize Quiz created successfully',
+        icon: 'success',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+      });
     } catch (err: any) {
       setError(err.message);
+      
+      Swal.fire({
+        title: 'Error!',
+        text: `Failed to create quiz: ${err.message}`,
+        icon: 'error',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      });
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleDeleteQuiz = async (quizId: string) => {
-    if (window.confirm('Are you sure you want to delete this quiz?')) {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
       try {
         setActionLoading(true);
         const success = await databaseService.deleteQuiz(quizId);
@@ -54,9 +86,21 @@ function PrizeQuiz() {
         if (success) {
           setQuizzes(prevQuizzes => prevQuizzes.filter(quiz => quiz.$id !== quizId));
           setError(null);
+          
+          Swal.fire(
+            'Deleted!',
+            'Your quiz has been deleted.',
+            'success'
+          );
         }
       } catch (err: any) {
         setError(`Failed to delete quiz: ${err.message}`);
+        
+        Swal.fire(
+          'Error!',
+          `Failed to delete quiz: ${err.message}`,
+          'error'
+        );
       } finally {
         setActionLoading(false);
       }
@@ -101,7 +145,7 @@ function PrizeQuiz() {
     <div className="w-full font-sans relative">
       
       {actionLoading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/30 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center">
             <LoadingSpinner size="medium" />
             <p className="mt-4 text-gray-700">Processing...</p>
@@ -142,6 +186,7 @@ function PrizeQuiz() {
           <CreateQuizForm 
             onCancel={() => setShowCreateForm(false)}
             onCreateQuiz={handleCreateQuiz}
+            isPrizeQuiz={true}
           />
         )}
         
@@ -155,6 +200,7 @@ function PrizeQuiz() {
                 <th className="py-3 px-2 font-semibold whitespace-nowrap text-center">Quiz name</th>
                 <th className="py-3 px-2 font-semibold whitespace-nowrap text-center">Status</th>
                 <th className="py-3 px-2 font-semibold whitespace-nowrap text-center">Questions / Public</th>
+                <th className="py-3 px-2 font-semibold whitespace-nowrap text-center">Prize Amount</th>
                 <th className="py-3 px-2 font-semibold whitespace-nowrap text-center">Select Template</th>
                 <th className="py-3 px-2 font-semibold whitespace-nowrap text-center">Duplicate</th>
                 <th className="py-3 px-2 font-semibold whitespace-nowrap text-center">Link</th>
@@ -181,6 +227,7 @@ function PrizeQuiz() {
                   </td>
                   <td className="px-2 py-2 align-middle font-normal">{quiz.status}</td>
                   <td className="px-2 py-2 align-middle font-normal">{quiz.questions}</td>
+                  <td className="px-2 py-2 align-middle font-normal">${quiz.prizeAmount || '0'}</td>
                   <td className="px-2 py-2 align-middle">
                     <select className="border rounded px-2 py-1 min-w-[170px] text-base font-normal">
                       <option>{quiz.template}</option>

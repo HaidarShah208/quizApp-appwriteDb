@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 
  
 
-export default function CreateQuizForm({ onCancel, onCreateQuiz }: CreateQuizFormProps) {
+export default function CreateQuizForm({ onCancel, onCreateQuiz, isPrizeQuiz = false }: CreateQuizFormProps & { isPrizeQuiz?: boolean }) {
   const [formData, setFormData] = useState({
     quizName: '',
     quizTitle: '',
@@ -14,6 +14,7 @@ export default function CreateQuizForm({ onCancel, onCreateQuiz }: CreateQuizFor
     timePerQuestion: '10',
     aboutTitle: '',
     aboutParagraph: '',
+    prizeAmount: '',
   });
 
   const [tags, setTags] = useState<string[]>([]);
@@ -64,7 +65,7 @@ export default function CreateQuizForm({ onCancel, onCreateQuiz }: CreateQuizFor
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-lg mb-6">
       <div className="bg-[#DC3414] text-white p-4 text-xl font-semibold">
-        Create Arbitrage Quiz
+        Create {isPrizeQuiz ? 'Prize' : 'Arbitrage'} Quiz
       </div>
       
       <div className="p-6">
@@ -104,6 +105,8 @@ export default function CreateQuizForm({ onCancel, onCreateQuiz }: CreateQuizFor
               required
             />
           </div>
+
+ 
 
           <div>
             <label className="block text-gray-700 mb-2">Select first color</label>
@@ -152,7 +155,20 @@ export default function CreateQuizForm({ onCancel, onCreateQuiz }: CreateQuizFor
               className="w-full border text-black rounded-lg px-4 py-2 focus:outline-none focus:ring focus:border-blue-300"
             />
           </div>
-
+          {isPrizeQuiz && (
+            <div>
+              <label className="block text-gray-700 mb-2">Prize Amount</label>
+              <input
+                type="number"
+                name="prizeAmount"
+                value={formData.prizeAmount}
+                onChange={handleInputChange}
+                placeholder="Enter Prize Amount"
+                className="w-full border text-black rounded-lg px-4 py-2 focus:outline-none focus:ring focus:border-blue-300"
+                required
+              />
+            </div>
+          )}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="text-gray-700 mb-4">About Quiz</h3>
             <div className="mb-4">

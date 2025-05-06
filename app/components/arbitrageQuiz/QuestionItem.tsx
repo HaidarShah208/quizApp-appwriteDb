@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Question } from '@/types/QuizType';
 import { databaseService } from '@/app/appwrite/database.service';
 import LoadingSpinner from '../loader/LoadingSpinner';
+import Swal from 'sweetalert2';
 
 interface QuestionWithAnswer extends Question {
   correctAnswer: string;
@@ -57,10 +58,35 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
   const handleDelete = async () => {
     if (!onDelete) return;
     
-    if (window.confirm('Are you sure you want to delete this question?')) {
+    // Use SweetAlert2 for confirmation
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
       setIsDeleting(true);
       try {
         await onDelete(question.id);
+        
+        // Show success message
+        Swal.fire(
+          'Deleted!',
+          'Your question has been deleted.',
+          'success'
+        );
+      } catch (error) {
+        // Show error message
+        Swal.fire(
+          'Error!',
+          'Failed to delete the question.',
+          'error'
+        );
       } finally {
         setIsDeleting(false);
       }
@@ -70,12 +96,43 @@ const QuestionItem: React.FC<QuestionItemProps> = ({
   const handleStatusChange = async () => {
     if (!onStatusChange) return;
     
-    setIsChangingStatus(true);
-    try {
-      const newStatus = question.status === 'Published' ? 'Unpublished' : 'Published';
-      await onStatusChange(question.id, newStatus);
-    } finally {
-      setIsChangingStatus(false);
+    const newStatus = question.status === 'Published' ? 'Unpublished' : 'Published';
+    const actionText = question.status === 'Published' ? 'unpublish' : 'publish';
+    
+    // Use SweetAlert2 for confirmation
+    const result = await Swal.fire({
+      title: 'Change Status',
+      text: `Are you sure you want to ${actionText} this question?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: question.status === 'Published' ? '#F59E0B' : '#10B981',
+      cancelButtonColor: '#6B7280',
+      confirmButtonText: `Yes, ${actionText} it!`
+    });
+
+    if (result.isConfirmed) {
+      setIsChangingStatus(true);
+      try {
+        await onStatusChange(question.id, newStatus);
+        
+        // Show success message
+        Swal.fire({
+          title: newStatus === 'Published' ? 'Published!' : 'Unpublished!',
+          text: `The question has been ${actionText}ed.`,
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false
+        });
+      } catch (error) {
+        // Show error message
+        Swal.fire(
+          'Error!',
+          `Failed to ${actionText} the question.`,
+          'error'
+        );
+      } finally {
+        setIsChangingStatus(false);
+      }
     }
   };
 

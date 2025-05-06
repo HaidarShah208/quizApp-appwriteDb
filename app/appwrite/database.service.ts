@@ -79,7 +79,8 @@ export const databaseService = {
                         duplicate: quizData.duplicate || 0,
                         publishedDate: quizData.publishedDate || new Date().toISOString(),
                         tags: quizData.tags || [],
-                        questions: '0/0'
+                        questions: '0/0',
+                        prizeAmount: quizData.prizeAmount || 0
                     }
                 })
             });

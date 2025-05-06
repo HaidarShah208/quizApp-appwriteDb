@@ -14,10 +14,10 @@ const sidebarOptions = [
 
 function Sidebar({ activeIndex, handleOptionClick }: { activeIndex: number, handleOptionClick: (idx: number) => void }) {
   return (
-    <aside className="w-64 flex-shrink-0 bg-white border-r flex flex-col py-8 px-4 sticky left-0 top-0 h-auto z-10">
-      <div className="text-2xl font-bold mb-8 text-red-600 flex items-center gap-2">
-        <span>Sy!</span>
-        <span className="text-black font-normal">Dashboard Testing</span>
+    <aside className="w-80 shadow-md flex-shrink-0 bg-white border-r flex flex-col py-8 px-4 sticky left-0 top-0 h-auto z-10">
+      <div className="text-xl mb-8 text-red-600 flex items-center gap-2">
+        <span className=' font-semibold text-4xl'>Sy!</span>
+        <span className="text-black font-semibold">Dashboard Testing</span>
       </div>
       <nav className="flex flex-col gap-2">
         {sidebarOptions.map((option, idx) => (

@@ -60,7 +60,8 @@ export async function POST(req: Request) {
                     duplicate: data.duplicate?.toString() || '0',
                     publishedDate: data.publishedDate || new Date().toISOString().split('T')[0],
                     tags: tagsValue,
-                    questions: data.questions || '0/0'
+                    questions: data.questions || '0/0',
+                    prizeAmount: parseInt(data.prizeAmount) || 0
                 };
                 
                 console.log('Processed data:', processedData);

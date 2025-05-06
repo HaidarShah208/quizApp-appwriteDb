@@ -5,6 +5,7 @@ import { databaseService } from '@/app/appwrite/database.service';
 import QuestionItem from './QuestionItem';
 import LoadingSpinner from '../loader/LoadingSpinner';
 import { QuestionsListProps } from '@/app/types/QuizType';
+import Swal from 'sweetalert2';
 
 const QuestionsList: React.FC<QuestionsListProps> = ({ 
   quizId, 
@@ -24,7 +25,6 @@ const QuestionsList: React.FC<QuestionsListProps> = ({
       setLoading(true);
       const fetchedQuestions = await databaseService.listQuizQuestions(quizId);
       
-      // Convert the Appwrite document format to our Question format
       const formattedQuestions = fetchedQuestions.map((q: any) => {
         const answers = Array.isArray(q.answers) ? q.answers : [];
         
@@ -50,23 +50,18 @@ const QuestionsList: React.FC<QuestionsListProps> = ({
     }
   };
 
-  // Re-fetch questions when quizId or refreshTrigger changes
   useEffect(() => {
     fetchQuestions();
   }, [quizId, refreshTrigger]);
 
   const handleDeleteQuestion = async (questionId: string | number) => {
     try {
-      // Implement actual question deletion using the database service
       await databaseService.deleteQuestion(String(questionId));
       
-      // Remove from selected questions if it was selected
       setSelectedQuestions(prev => prev.filter(id => id !== questionId));
       
-      // Update the questions list by filtering out the deleted question
       setQuestions(prev => prev.filter(q => q.id !== questionId));
       
-      // Also update the quiz question count
       await databaseService.updateQuizQuestionCount(quizId);
     } catch (err: any) {
       setError(`Error deleting question: ${err.message}`);
@@ -75,10 +70,8 @@ const QuestionsList: React.FC<QuestionsListProps> = ({
 
   const handleStatusChange = async (questionId: string | number, newStatus: 'Published' | 'Unpublished') => {
     try {
-      // Implement question status update
       await databaseService.updateQuestionStatus(String(questionId), newStatus);
       
-      // Update the local state to reflect the change
       setQuestions(prev => 
         prev.map(q => q.id === questionId ? {...q, status: newStatus} : q)
       );
@@ -118,7 +111,17 @@ const QuestionsList: React.FC<QuestionsListProps> = ({
   const handleBulkDelete = async () => {
     if (selectedQuestions.length === 0) return;
     
-    if (window.confirm(`Are you sure you want to delete ${selectedQuestions.length} questions?`)) {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `You are about to delete ${selectedQuestions.length} questions. This cannot be undone!`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete them!'
+    });
+
+    if (result.isConfirmed) {
       try {
         setLoading(true);
         await Promise.all(selectedQuestions.map(id => databaseService.deleteQuestion(id)));
@@ -128,8 +131,20 @@ const QuestionsList: React.FC<QuestionsListProps> = ({
         setAllSelected(false);
         
         await databaseService.updateQuizQuestionCount(quizId);
+        
+        Swal.fire(
+          'Deleted!',
+          `${selectedQuestions.length} questions have been deleted.`,
+          'success'
+        );
       } catch (err: any) {
         setError(`Error deleting questions: ${err.message}`);
+        
+        Swal.fire(
+          'Error!',
+          `Failed to delete questions: ${err.message}`,
+          'error'
+        );
       } finally {
         setLoading(false);
       }
@@ -142,7 +157,17 @@ const QuestionsList: React.FC<QuestionsListProps> = ({
     const newStatus = publish ? 'Published' : 'Unpublished';
     const actionText = publish ? 'publish' : 'unpublish';
     
-    if (window.confirm(`Are you sure you want to ${actionText} ${selectedQuestions.length} questions?`)) {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: `You are about to ${actionText} ${selectedQuestions.length} questions.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: publish ? '#10B981' : '#F59E0B', 
+      cancelButtonColor: '#6B7280',
+      confirmButtonText: `Yes, ${actionText} them!`
+    });
+
+    if (result.isConfirmed) {
       try {
         setLoading(true);
         await Promise.all(selectedQuestions.map(id => databaseService.updateQuestionStatus(id, newStatus)));
@@ -150,8 +175,20 @@ const QuestionsList: React.FC<QuestionsListProps> = ({
         setQuestions(prev => 
           prev.map(q => selectedQuestions.includes(String(q.id)) ? {...q, status: newStatus} : q)
         );
+        
+        Swal.fire(
+          publish ? 'Published!' : 'Unpublished!',
+          `${selectedQuestions.length} questions have been ${actionText}ed.`,
+          'success'
+        );
       } catch (err: any) {
         setError(`Error updating question status: ${err.message}`);
+        
+        Swal.fire(
+          'Error!',
+          `Failed to ${actionText} questions: ${err.message}`,
+          'error'
+        );
       } finally {
         setLoading(false);
       }

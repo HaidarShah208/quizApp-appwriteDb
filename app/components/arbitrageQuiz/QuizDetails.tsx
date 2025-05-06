@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { databaseService } from '@/app/appwrite/database.service';
 import LoadingSpinner from '../loader/LoadingSpinner';
 import QuestionsList from './QuestionsList';
+import Swal from 'sweetalert2';
 
 interface AppwriteDocument {
   $id: string;
@@ -41,26 +42,45 @@ export default function QuizDetails({ quiz, onBack }: QuizDetailsProps) {
     try {
       setIsBulkUpdating(true);
       
-      const questions = await databaseService.listQuizQuestions(quizId);
+      // Get all questions for the quiz
+      const allQuestions = await databaseService.listQuizQuestions(quizId);
       
-      if (questions.length === 0) {
-        setError('No questions to update');
-        return;
-      }
-      
+      // Update each question's status
       await Promise.all(
-        questions.map((question: any) => 
+        allQuestions.map((question: any) => 
           databaseService.updateQuestionStatus(question.$id, status)
         )
       );
       
-      await databaseService.updateQuizQuestionCount(quizId);
-      
+      // Refresh the questions list
       refreshQuestions();
       
       setError(null);
+      
+      // Show success toast notification
+      Swal.fire({
+        title: `Questions ${status === 'Published' ? 'Published' : 'Unpublished'}!`,
+        text: `All questions have been ${status === 'Published' ? 'published' : 'unpublished'} successfully`,
+        icon: 'success',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+      });
     } catch (err: any) {
       setError(`Failed to ${status === 'Published' ? 'publish' : 'unpublish'} all questions: ${err.message}`);
+      
+      // Show error toast
+      Swal.fire({
+        title: 'Error!',
+        text: `Failed to ${status === 'Published' ? 'publish' : 'unpublish'} all questions: ${err.message}`,
+        icon: 'error',
+        toast: true, 
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      });
     } finally {
       setIsBulkUpdating(false);
     }
@@ -140,9 +160,31 @@ export default function QuizDetails({ quiz, onBack }: QuizDetailsProps) {
       
       refreshQuestions();
       
+      // Show success toast notification
+      Swal.fire({
+        title: 'Question Added!',
+        text: 'Your question has been added successfully',
+        icon: 'success',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true
+      });
     } catch (err: any) {
       setError(`Failed to add question: ${err.message}`);
       console.error('Error adding question:', err);
+      
+      // Show error toast
+      Swal.fire({
+        title: 'Error!',
+        text: `Failed to add question: ${err.message}`,
+        icon: 'error',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      });
     } finally {
       setSaving(false);
     }
